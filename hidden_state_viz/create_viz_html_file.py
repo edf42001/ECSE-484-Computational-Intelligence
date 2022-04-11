@@ -22,11 +22,11 @@ length = len(generated_text)
 # cv2.imshow("Activations", data)
 # cv2.waitKey()
 
+# Notes: Neuron 309 becomes inactive on "units".
 
-# Node index to look at
-node_index = 68
-
-with open(viz_file, "w") as f:
+html_string = ""
+for node_index in range(data.shape[1]):
+    activations_colored_text = ""
     for i in range(length):
         node_activation = data[i, node_index]
 
@@ -39,6 +39,12 @@ with open(viz_file, "w") as f:
         # print(rgb_to_hex(rgb), node_activation)
 
         color = "#" + rgb_to_hex(rgb)
-        char_text_formatting = "<span style=\"background-color: {}\">{}</span>".format(color, generated_text[i])
+        char_text = "<span style=\"background-color: {}\">{}</span>".format(color, generated_text[i])
+        activations_colored_text += char_text
 
-        f.write(char_text_formatting)
+    node_div_text = "<div id={}>{}</div>\n".format(node_index, activations_colored_text)
+    html_string += node_div_text
+
+# Save to the html file
+with open(viz_file, "w") as f:
+    f.write(html_string)

@@ -6,12 +6,11 @@ from keras.models import Model
 import numpy as np
 import random
 import io
-import os
 
 from custom_text_gen_callback import sample, generate_samples
 
 base_path = "../"
-data_path = base_path + "input/csds.txt"
+data_path = base_path + "input/all.txt"
 
 # Process the data
 # Read the file, all lowercase text to start with
@@ -29,29 +28,33 @@ print("Number of different chars:", num_chars)
 
 maxlen = 40
 
-model = keras.models.load_model(base_path + "model_checkpoints/20220410_195605/01-3.25-3.12.hdf5")
+model_path = base_path + "model_checkpoints/all_2lstm_128_dropout_adam/30-1.30-1.21.hdf5"
+model = keras.models.load_model(model_path)
 model.summary()
 
 model_lstm1 = model.layers[0]
-
-print(model_lstm1)
-print(model_lstm1.input_shape)
+model_lstm2 = model.layers[2]  # There is a dropout layer at index 1
+units = model_lstm1.units
 
 inputs = Input(shape=model_lstm1.input_shape[1:])
-lstm, state_h, state_c = LSTM(model_lstm1.units, return_state=True)(inputs)
-model2 = Model(inputs=[inputs], outputs=[lstm, state_h, state_c])
+lstm1, state_h1, state_c1 = LSTM(model_lstm1.units, return_sequences=True, return_state=True)(inputs)
+lstm2, state_h2, state_c2 = LSTM(model_lstm1.units, return_state=True)(lstm1)
+model2 = Model(inputs=[inputs], outputs=[lstm1, state_h1, state_c1, lstm2, state_h2, state_c2])
 model2.layers[1].set_weights(model_lstm1.get_weights())
+model2.layers[2].set_weights(model_lstm2.get_weights())
+model2.summary()
+n_hidden_vectors = 6
 
-diversity = 1.0
-length = 100
-print("...Diversity:", diversity)
+diversity = 0.55
+length = 550
+print("Diversity:", diversity)
 
 generated = ""
 start_index = random.randint(0, len(text) - maxlen - 1)
 sentence = text[start_index:start_index + maxlen]
 print("Generating with: " + sentence)
 
-stored_hidden_states = np.empty((length, 3 * 64))
+stored_hidden_states = np.empty((length, n_hidden_vectors * units))
 
 for i in range(length):
     x_pred = np.zeros((1, maxlen, len(chars)))
@@ -61,8 +64,13 @@ for i in range(length):
     preds = model.predict(x_pred, verbose=0)[0]
 
     hidden_states = model2.predict(x_pred)
-    for j in range(3):
-        stored_hidden_states[i, j*64:(j+1)*64] = hidden_states[j]
+
+    for j in range(n_hidden_vectors):
+        if j == 0:
+            # return sequences is true so we need to get only the last value
+            stored_hidden_states[i, j*units:(j+1)*units] = hidden_states[j][0, -1, :]
+        else:
+            stored_hidden_states[i, j*units:(j+1)*units] = hidden_states[j]
 
     layer1 = model.layers[0]
     layer2 = model.layers[1]
