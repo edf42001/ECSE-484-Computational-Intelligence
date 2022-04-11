@@ -43,8 +43,8 @@ print("Number of sequences:", len(sentences))
 # print(next_chars)
 
 # One hot encoded input sequences and output character
-x = np.zeros((len(sentences), maxlen, len(chars)), dtype=np.bool)
-y = np.zeros((len(sentences), len(chars)), dtype=np.bool)
+x = np.zeros((len(sentences), maxlen, len(chars)), dtype=bool)
+y = np.zeros((len(sentences), len(chars)), dtype=bool)
 
 # Create the one hot encodings
 for i, sentence in enumerate(sentences):
@@ -81,7 +81,7 @@ model_checkpoint_cb = keras.callbacks.ModelCheckpoint(
     verbose=True)
 
 # Create a custom callback to generate sample text every couple of epochs
-custom_text_gen_cb = CustomTextGenCallback(2, maxlen, text, chars, char_indices, indices_char)
+custom_text_gen_cb = CustomTextGenCallback(2, 10, maxlen, text, chars, char_indices, indices_char)
 
 # TODO: use adam?
 optimizer = keras.optimizers.RMSprop(learning_rate=0.01)
@@ -90,12 +90,13 @@ model.compile(loss="categorical_crossentropy", optimizer=optimizer)
 # Print a summary of our model
 model.summary()
 
-epochs = 3
+epochs = 1
 # batch_size = 128
 batch_size = 2048
 
+# If the custom_text_gen_cb comes after the model_checkpoint_cb, then the history dictionary becomes empty
 history = model.fit(x, y, batch_size=batch_size, epochs=epochs,
-                    callbacks=[model_checkpoint_cb, custom_text_gen_cb],
+                    callbacks=[custom_text_gen_cb, model_checkpoint_cb],
                     validation_split=0.1)
 
 print(history.history)

@@ -13,7 +13,10 @@ def sample(preds, temperature=1.0):
     return np.argmax(probas)
 
 
-def generate_samples(model, maxlen, text, chars, char_indices, indices_char):
+def generate_samples(model, length, maxlen, text, chars, char_indices, indices_char):
+    # Save model history, because calling predict or evaluate clears it
+    history = model.history
+
     start_index = random.randint(0, len(text) - maxlen - 1)
     for diversity in [0.2, 0.5, 1.2]:
         print("...Diversity:", diversity)
@@ -22,7 +25,7 @@ def generate_samples(model, maxlen, text, chars, char_indices, indices_char):
         sentence = text[start_index : start_index + maxlen]
         print('...Generating with seed: "' + sentence + '"')
 
-        for i in range(100):
+        for i in range(length):
             x_pred = np.zeros((1, maxlen, len(chars)))
             for t, char in enumerate(sentence):
                 x_pred[0, t, char_indices[char]] = 1.0
@@ -35,9 +38,14 @@ def generate_samples(model, maxlen, text, chars, char_indices, indices_char):
         print("...Generated: ", generated)
         print()
 
+        # Backup model history
+        model.history = history
+
+        return generated
+
 
 class CustomTextGenCallback(keras.callbacks.Callback):
-    def __init__(self, epoch_frequency, maxlen, text, chars, char_indices, indices_char):
+    def __init__(self, epoch_frequency, length, maxlen, text, chars, char_indices, indices_char):
         self.epoch_frequency = epoch_frequency
 
         # Need all this stuff to do the sampling. Does this double data storage usage, or is it pass by reference?
@@ -46,11 +54,12 @@ class CustomTextGenCallback(keras.callbacks.Callback):
         self.chars = chars
         self.char_indices = char_indices
         self.indices_char = indices_char
+        self.length = length
 
     def on_epoch_end(self, epoch, logs=None):
         if epoch % self.epoch_frequency == 0:
-            generate_samples(self.model, self.maxlen, self.text, self.chars, self.char_indices, self.indices_char)
+            generate_samples(self.model, self.length, self.maxlen, self.text, self.chars, self.char_indices, self.indices_char)
 
     def on_train_end(self, logs=None):
         # In case the frequencies don't line up, also want to call this when we finish training for final results
-        generate_samples(self.model, self.maxlen, self.text, self.chars, self.char_indices, self.indices_char)
+        generate_samples(self.model, self.length, self.maxlen, self.text, self.chars, self.char_indices, self.indices_char)
