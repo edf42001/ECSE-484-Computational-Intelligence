@@ -10,7 +10,7 @@ import io
 from custom_text_gen_callback import sample, generate_samples
 
 base_path = "../"
-data_path = base_path + "input/all.txt"
+data_path = base_path + "all_1.4_python.txt"
 
 # Process the data
 # Read the file, all lowercase text to start with
@@ -26,9 +26,9 @@ indices_char = dict((i, c) for i, c in enumerate(chars))
 num_chars = len(chars)
 print("Number of different chars:", num_chars)
 
-maxlen = 40
+maxlen = 50
 
-model_path = base_path + "model_checkpoints/all_2lstm_128_dropout_adam/30-1.30-1.21.hdf5"
+model_path = base_path + "model_checkpoints/2_lstm_256_all_1.4_python/01-1.50-1.55.hdf5"
 model = keras.models.load_model(model_path)
 model.summary()
 
@@ -45,8 +45,8 @@ model2.layers[2].set_weights(model_lstm2.get_weights())
 model2.summary()
 n_hidden_vectors = 6
 
-diversity = 0.55
-length = 550
+diversity = 0.9
+length = 5000
 print("Diversity:", diversity)
 
 generated = ""
@@ -80,7 +80,6 @@ for i in range(length):
     sentence = sentence[1:] + next_char
     generated += next_char
 
-
 print("Result: " + generated)
 
 folder = "hidden_state_viz_data"
@@ -90,3 +89,6 @@ text_file = folder + "/generated_text.txt"
 np.savetxt(hidden_data_file, stored_hidden_states, delimiter=",")
 with open(text_file, 'w') as f:
     f.write(generated)
+
+#TODO: Remove duplicate descriptions
+# Remove weird characters
