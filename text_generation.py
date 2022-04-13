@@ -7,6 +7,7 @@ import random
 import io
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 from custom_text_gen_callback import CustomTextGenCallback
 
@@ -14,7 +15,7 @@ from custom_text_gen_callback import CustomTextGenCallback
 # https://keras.io/examples/generative/lstm_character_level_text_generation/
 
 base_path = "./"
-data_path = base_path + "input/csds.txt"
+data_path = base_path + "input/courses/csds.txt"
 
 # Read the file, all lowercase text to start with
 with io.open(data_path, encoding="utf-8") as f:
@@ -57,7 +58,9 @@ model = keras.Sequential(
     [
         keras.Input(shape=(maxlen, num_chars)),
         layers.LSTM(64, return_sequences=True),
+        layers.Dropout(0.0),
         layers.LSTM(64),
+        layers.Dropout(0.0),
         layers.Dense(num_chars, activation="softmax")
     ]
 )
@@ -81,22 +84,35 @@ model_checkpoint_cb = keras.callbacks.ModelCheckpoint(
     verbose=True)
 
 # Create a custom callback to generate sample text every couple of epochs
-custom_text_gen_cb = CustomTextGenCallback(2, 10, maxlen, text, chars, char_indices, indices_char)
+custom_text_gen_cb = CustomTextGenCallback(4, 50, maxlen, text, chars, char_indices, indices_char)
 
 # TODO: use adam?
-optimizer = keras.optimizers.RMSprop(learning_rate=0.01)
+optimizer = keras.optimizers.RMSprop(learning_rate=0.01, clipnorm=5)
 model.compile(loss="categorical_crossentropy", optimizer=optimizer)
 
 # Print a summary of our model
 model.summary()
 
-epochs = 1
-# batch_size = 128
-batch_size = 2048
+epochs = 7
+batch_size = 128
 
 # If the custom_text_gen_cb comes after the model_checkpoint_cb, then the history dictionary becomes empty
 history = model.fit(x, y, batch_size=batch_size, epochs=epochs,
-                    callbacks=[custom_text_gen_cb, model_checkpoint_cb],
-                    validation_split=0.1)
+                    callbacks=[model_checkpoint_cb],
+                    validation_split=0.05, shuffle=False)
 
 print(history.history)
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs = range(len(loss))
+
+plt.figure()
+
+plt.plot(epochs, loss, 'bo', label='Training Loss')
+plt.plot(epochs, val_loss, 'b', label='Validation Loss')
+plt.title('Training and validation loss')
+plt.legend()
+
+plt.show()
