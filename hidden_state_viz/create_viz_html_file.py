@@ -24,7 +24,7 @@ length = len(generated_text)
 html_string = ""
 # TODO: investigate node 1300's output is out of range
 # 1311 is the parenthase neuron
-for node_index in range(data.shape[1] - 512, data.shape[1]-256):
+for node_index in range(data.shape[1]):
     activations_colored_text = ""
     for i in range(length):
         node_activation = data[i, node_index]

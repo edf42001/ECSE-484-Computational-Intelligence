@@ -13,22 +13,13 @@ def divide_text_into_sequences(text: str, num_batches: int, batch_size: int,
         something = np.expand_dims(x.reshape(-1, sequence_len), axis=1)
         X2[:, i::batch_size, :] = something
 
-    # print(X)
-    # print(X2)
-    # print(X2.shape)
-
     X2 = X2.reshape((-1, sequence_len))
-    # print(X2)
-    # print(X2.shape)
 
     num_chars = len(char_indices)
     X3 = np.zeros((num_batches * batch_size, sequence_len, num_chars))
     for i in range(num_batches * batch_size):
         for t in range(sequence_len):
             X3[i, t, char_indices[X2[i, t]]] = 1
-
-    # print(X3)
-    # print(X3.shape)
 
     return X3
 
@@ -57,27 +48,15 @@ def stateful_training_data_from_file(filename: str, batch_size: int = 128, seque
     num_chars = len(chars)
     print("Number of different chars:", num_chars)
 
-    # Split the text into chunks of the input and output sequence. (-1, because that extra 1 is for the output sequence)
-    # in_sentences = []
-    # out_sentences = []
-    # step = sequence_len
-    # for i in range(0, len(text) - 1, step):
-    #     in_sentences.append(text[i : i + sequence_len])
-    #     out_sentences.append(text[i + 1 : i + 1 + sequence_len])
-
     X = divide_text_into_sequences(text[:-1], num_batches, batch_size, sequence_len, char_indices)
     Y = divide_text_into_sequences(text[1:], num_batches, batch_size, sequence_len, char_indices)
 
     num_sequences = X.shape[0]
     print("Data shape:", X.shape)
 
-    # print("Number of sequences:", len(in_sentences))
-    # print("In:", in_sentences)
-    # print("Out:", out_sentences)
-
     # Pick some indices that will be for validation
     n_validation = num_sequences * validation_split
-    n_validation = int(batch_size * round(n_validation / batch_size))  # Round to nearest batch size
+    n_validation = int(batch_size * np.ceil(n_validation / batch_size))  # Round up to nearest batch size
     validation_indices = np.random.choice(num_sequences, size=n_validation, replace=False)
 
     # Extract these sequences for validation

@@ -3,6 +3,7 @@ import numpy as np
 import random
 
 
+
 def sample(preds, temperature=1.0):
     # helper function to sample an index from a probability array
     preds = np.asarray(preds).astype("float64")
@@ -16,7 +17,6 @@ def sample(preds, temperature=1.0):
 def generate_samples(model, length, text, char_indices, indices_char):
     # Save model history, because calling predict or evaluate clears it
     history = model.history
-
     start_index = random.randint(0, len(text)-1)
     for diversity in [0.5, 1.0]:
         print("Diversity:", diversity)
@@ -58,11 +58,33 @@ class CustomTextGenCallback(keras.callbacks.Callback):
         self.indices_char = indices_char
         self.length = length
 
+        self.pred_model = None
+
     def on_epoch_end(self, epoch, logs=None):
         # Epochs start counting at 1, so subtract 1
         if epoch % self.epoch_frequency == 0:
-            generate_samples(self.model, self.length, self.text, self.char_indices, self.indices_char)
+            self.create_pred_model()
+            generate_samples(self.pred_model, self.length, self.text, self.char_indices, self.indices_char)
 
     def on_train_end(self, logs=None):
         # In case the frequencies don't line up, also want to call this when we finish training for final results
-        generate_samples(self.model, self.length, self.text, self.char_indices, self.indices_char)
+        self.create_pred_model()
+        generate_samples(self.pred_model, self.length, self.text, self.char_indices, self.indices_char)
+
+    def create_pred_model(self):
+        # Need to make a copy of the model that has batch size and sequence length of 0 so we can
+        # have it predict characters one at a time, otherwise tensorflow doesn't like it.
+        # Does this double RAM usage?
+        units = self.model.layers[0].units
+
+        # TODO: This should work for both 2 & 3 layer LSTMs
+        self.pred_model = keras.Sequential(
+            [
+                keras.Input(batch_input_shape=(1, 1, len(self.char_indices))),
+                keras.layers.LSTM(units, return_sequences=True, stateful=True),
+                keras.layers.LSTM(units, return_sequences=True, stateful=True),
+                keras.layers.Dense(len(self.char_indices), activation="softmax")
+            ]
+        )
+
+        self.pred_model.set_weights(self.model.get_weights())

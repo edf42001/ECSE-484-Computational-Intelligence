@@ -14,23 +14,23 @@ from prepare_training_data_from_file import stateful_training_data_from_file
 # https://keras.io/examples/generative/lstm_character_level_text_generation/
 
 base_path = "./"
-data_path = base_path + "input/courses/csds.txt"
+# data_path = base_path + "input/courses/csds.txt"
+data_path = base_path + "input/4.1_python.txt"
+
 
 batch_size = 128
-sequence_len = 40
+sequence_len = 50
 
 epochs = 60
+epoch_save_freq = 5
 
 gen_text_freq = 20
-gen_text_length = 150
+gen_text_length = 100
 
 ret = stateful_training_data_from_file(data_path, batch_size, sequence_len, validation_split=0.05)
 X_train, Y_train, X_validate, Y_validate, char_indices, indices_char, text, chars = ret
 num_chars = len(char_indices)
-
-# Keras model checkpoint saves every N batches, so we need batches/epoch
-epoch_save_freq = 3
-batches_per_epoch = X_train.shape[0] // batch_size
+print("Chars:", chars)
 
 # Model: a single LSTM layer TODO? Add dropout
 model = keras.Sequential(
@@ -62,8 +62,8 @@ model_checkpoint_cb = keras.callbacks.ModelCheckpoint(
     save_weights_only=False,
     save_best_only=False,
     verbose=True,
-    # save_freq=epoch_save_freq*batches_per_epoch+1)
-    save_freq="epoch")
+    period=epoch_save_freq  # period is deprecated but this is the only way to get "val_loss" into the format string
+)
 
 # Create a custom callback to generate sample text every couple of epochs
 custom_text_gen_cb = CustomTextGenCallback(gen_text_freq, gen_text_length, text, char_indices, indices_char)

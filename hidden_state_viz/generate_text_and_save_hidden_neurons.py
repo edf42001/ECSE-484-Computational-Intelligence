@@ -59,7 +59,7 @@ print()
 n_hidden_vectors = 6
 
 diversity = 0.7
-length = 400
+length = 1000
 print("Diversity:", diversity)
 
 generated = ""
