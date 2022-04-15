@@ -1,0 +1,9 @@
+# To find / replace all in a file
+sed -i 's/find/replace/g' <files>
+
+# To search for words in files (can add -R flag for recursive)
+grep "text" <files>
+
+# To find all files in a size range, and run a command on them (cp, in this case)
+find ./ -type f -size +43k -size -51k -exec cp {} python_files_medium \;
+

@@ -3,7 +3,6 @@ import numpy as np
 import random
 
 
-
 def sample(preds, temperature=1.0):
     # helper function to sample an index from a probability array
     preds = np.asarray(preds).astype("float64")
