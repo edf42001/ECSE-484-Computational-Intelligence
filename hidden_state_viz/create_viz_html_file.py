@@ -23,7 +23,7 @@ length = len(generated_text)
 # Monospaced font header
 html_string = "<head><style type = \"text/css\">div {font-family: monospace}</style></head>\n"
 
-for node_index in range(data.shape[1] - 256, data.shape[1] - 128):
+for node_index in range(data.shape[1]):
     activations_colored_text = ""
     for i in range(length):
         # When we record the data, we feed a character in, and record the output char and node activations
