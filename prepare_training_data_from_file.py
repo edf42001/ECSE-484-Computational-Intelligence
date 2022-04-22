@@ -60,10 +60,15 @@ def divide_text_into_sequences(text: str, num_batches: int, batch_size: int,
     return X2_train, X2_val
 
 
-def stateful_training_data_from_file(filename: str, batch_size: int = 128, sequence_len: int = 50, val_split: float = 0.05):
+def stateful_training_data_from_file(filename: str, batch_size: int = 128, sequence_len: int = 50,
+                                     val_split: float = 0.05, lower: bool = True):
     print("Reading data from " + filename)
     with io.open(filename, encoding="utf-8") as f:
-        text = f.read().lower()
+        text = f.read()
+
+    # Optionally can convert to lowercase
+    if lower:
+        text = text.lower()
 
     text_len = len(text)
     print("Text length:", text_len)
