@@ -6,24 +6,33 @@ import numpy as np
 import random
 import time
 
-from custom_text_gen_callback import sample
+from callbacks.custom_text_gen_callback import sample
 from prepare_training_data_from_file import stateful_training_data_from_file
 
 base_path = "../"
 # data_path = base_path + "input/courses/csds.txt"
-data_path = base_path + "input/4.1_python.txt"
+# data_path = base_path + "input/4.1_python.txt"
 # data_path = base_path + "input/a_few_courses.txt"
+data_path = base_path + "input/all_courses.txt"
+# data_path = base_path + "input/good_python.txt"
+
 
 batch_size = 128
 sequence_len = 40
 
-ret = stateful_training_data_from_file(data_path, batch_size, sequence_len, validation_split=0.05)
+ret = stateful_training_data_from_file(data_path, batch_size, sequence_len, val_split=0.05, lower=False)
 _, _, _, _, char_indices, indices_char, text, chars = ret
 num_chars = len(char_indices)
+print(chars)
+print(num_chars)
 
-model_path = base_path + "model_checkpoints/stateful_3_512_100_1e-4_4.1_python/99-1.16-1.05.hdf5"
-# model_path = base_path + "model_checkpoints/stateful_128_a_few_courses/150-1.20-1.13.hdf5"
-# model_path = base_path + "model_checkpoints/stateful_2_512_100_few_courses_lr_decay/250-1.06-1.06.hdf5"
+# model_path = base_path + "model_checkpoints/val_fixed_4.1_python/99-0.98-0.88.hdf5"
+# model_path = base_path + "model_checkpoints/val_fixed_a_few_courses/140-1.05-0.98.hdf5"
+# model_path = base_path + "model_checkpoints/val_fixed_4.1_python/36-0.90-0.83.hdf5"
+# model_path = base_path + "model_checkpoints/all_courses/50-0.80-0.79.hdf5"
+# model_path = base_path + "model_checkpoints/good_python/80-0.96-0.96.hdf5"
+model_path = base_path + "model_checkpoints/all_courses_upper/150-0.81-0.80.hdf5"
+
 
 model = keras.models.load_model(model_path)
 model.summary()
@@ -42,15 +51,17 @@ inputs = Input(batch_input_shape=(1, 1, model_lstm1.input_shape[2]))
 lstm1, state_h1, state_c1 = LSTM(units, return_sequences=True, return_state=True, stateful=True)(inputs)
 lstm2, state_h2, state_c2 = LSTM(units, return_sequences=True, return_state=True, stateful=True)(lstm1)
 lstm3, state_h3, state_c3 = LSTM(units, return_sequences=True, return_state=True, stateful=True)(lstm2)
+# out = Dense(num_chars, activation="softmax")(lstm2)
 out = Dense(num_chars, activation="softmax")(lstm3)
+# model3 = Model(inputs=[inputs], outputs=[out, state_h1, state_h2])
 model3 = Model(inputs=[inputs], outputs=[out, state_h1, state_h2, state_h3])
+
 
 model3.set_weights(model.get_weights())
 model3.summary()
 print()
 
-diversity = 0.65  # For good python results
-# diversity = 0.8 # For good courses results
+diversity = 0.75
 length = 1000
 
 save_hidden_states = False
@@ -60,7 +71,7 @@ start = time.time()
 # The resulting text
 generated = ""
 
-# Sample a sentence to warmup the network with
+# Sample a sentence to warmup the nketwork with
 start_index = random.randint(0, len(text) - sequence_len - 1)
 sentence = text[start_index:start_index + sequence_len]
 
@@ -83,7 +94,6 @@ for i in range(len(sentence) - 1):
 
 # Now, starting with the last char, feed the chars and sample a char as output
 next_char = sentence[-1]
-
 
 for i in range(length):
     # One hot encoded vector for input char
