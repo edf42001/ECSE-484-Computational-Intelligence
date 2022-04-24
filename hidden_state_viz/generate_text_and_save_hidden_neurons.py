@@ -10,8 +10,6 @@ from callbacks.custom_text_gen_callback import sample
 from prepare_training_data_from_file import stateful_training_data_from_file
 
 base_path = "../"
-# data_path = base_path + "input/courses/csds.txt"
-# data_path = base_path + "input/4.1_python.txt"
 # data_path = base_path + "input/a_few_courses.txt"
 data_path = base_path + "input/all_courses.txt"
 # data_path = base_path + "input/good_python.txt"
@@ -20,18 +18,15 @@ data_path = base_path + "input/all_courses.txt"
 batch_size = 128
 sequence_len = 40
 
-ret = stateful_training_data_from_file(data_path, batch_size, sequence_len, val_split=0.05, lower=False)
+ret = stateful_training_data_from_file(data_path, batch_size, sequence_len, val_split=0.05, lower=True)
 _, _, _, _, char_indices, indices_char, text, chars = ret
 num_chars = len(char_indices)
 print(chars)
 print(num_chars)
 
-# model_path = base_path + "model_checkpoints/val_fixed_4.1_python/99-0.98-0.88.hdf5"
-# model_path = base_path + "model_checkpoints/val_fixed_a_few_courses/140-1.05-0.98.hdf5"
-# model_path = base_path + "model_checkpoints/val_fixed_4.1_python/36-0.90-0.83.hdf5"
 # model_path = base_path + "model_checkpoints/all_courses/50-0.80-0.79.hdf5"
-# model_path = base_path + "model_checkpoints/good_python/80-0.96-0.96.hdf5"
-model_path = base_path + "model_checkpoints/all_courses_upper/150-0.81-0.80.hdf5"
+model_path = base_path + "model_checkpoints/good_python/80-0.96-0.96.hdf5"
+# model_path = base_path + "model_checkpoints/all_courses_upper/150-0.81-0.80.hdf5"
 
 
 model = keras.models.load_model(model_path)
@@ -64,7 +59,7 @@ print()
 diversity = 0.75
 length = 1000
 
-save_hidden_states = False
+save_hidden_states = True
 
 start = time.time()
 
