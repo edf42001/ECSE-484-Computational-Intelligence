@@ -24,7 +24,7 @@ num_chars = len(char_indices)
 print(chars)
 print(num_chars)
 
-# model_path = base_path + "model_checkpoints/all_courses/50-0.80-0.79.hdf5"
+# model_path = base_path + "model_checkpoints/all_courses/150-0.80-0.79.hdf5"
 model_path = base_path + "model_checkpoints/good_python/80-0.96-0.96.hdf5"
 # model_path = base_path + "model_checkpoints/all_courses_upper/150-0.81-0.80.hdf5"
 

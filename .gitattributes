@@ -1,0 +1,4 @@
+input/all_courses.txt filter=lfs diff=lfs merge=lfs -text
+input/good_python.txt filter=lfs diff=lfs merge=lfs -text
+model_checkpoints/all_courses/150-0.80-0.79.hdf5 filter=lfs diff=lfs merge=lfs -text
+model_checkpoints/good_python/80-0.96-0.96.hdf5 filter=lfs diff=lfs merge=lfs -text
